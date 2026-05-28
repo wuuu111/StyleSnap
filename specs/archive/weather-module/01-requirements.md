@@ -1,7 +1,7 @@
 # Weather Skill Requirements
 
 ## Feature Goal
-Return stable weather context for outfit recommendation without turning StyleSnap into a weather app.
+Return stable weather context for outfit recommendation without turning StyleSnap into a standalone weather product.
 
 ## User Stories
 - As a user, I can let StyleSnap use my current location to prepare weather-aware outfit context.

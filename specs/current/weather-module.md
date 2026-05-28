@@ -21,8 +21,7 @@
 - Only single-snapshot mock weather, no forecast data
 - No real browser geocoding or third-party weather requests
 - Unknown coordinates currently fall back to Taipei through mock resolution
-- Recommendation output is still placeholder-only
+- Weather context remains mock-backed even though the recommendation and landing experience now present it as a polished contextual capability
 
-## Phase 4 Dependencies
-- Recommendation scoring can consume `outfit_context` directly instead of re-deriving weather rules
-- The recommendation page already has a location-first weather context slot ready for outfit results
+## Final Positioning
+- Weather Skill remains a contextual subsystem that feeds recommendation rather than a primary standalone product surface

@@ -31,11 +31,11 @@ Generate 2-3 explainable outfit recommendations from the user's wardrobe plus We
    - `user_preference_score`
    - `total_outfit_score`
 8. `total_outfit_score` must use:
-   - `0.30 * WeatherFit`
-   - `0.25 * StyleMatch`
-   - `0.20 * ColorHarmony`
-   - `0.15 * OccasionFit`
-   - `0.10 * UserPreference`
+   - `0.30 * Weather Fit`
+   - `0.25 * Style Match`
+   - `0.20 * Color Harmony`
+   - `0.15 * Occasion Fit`
+   - `0.10 * User Preference`
 9. The API must return:
    - `weather_context`
    - `recommended_outfits`

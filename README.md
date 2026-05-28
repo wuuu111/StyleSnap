@@ -1,199 +1,179 @@
 # StyleSnap
 
-## Project Overview
-StyleSnap is an AI-powered personal outfit assistant that helps users build a digital wardrobe from uploaded clothing images and generate daily outfit recommendations based on personal wardrobe items, target style, occasion, color harmony, weather conditions, and user preferences.
+## 1. Project Overview
+StyleSnap is an AI-powered personal outfit assistant that helps users build a digital wardrobe from clothing images and generate daily outfit recommendations based on personal wardrobe items, target style, occasion, weather context, color harmony, and user preferences.
 
-StyleSnap 是一款基于个人衣橱的 AI 每日穿搭助手。用户可以上传衣物图片构建数字衣橱，系统结合衣物属性、目标风格、今日场景、色彩搭配、天气情况和个人偏好，生成可解释的个性化穿搭推荐。
+StyleSnap 是一款基于个人衣橱的 AI 每日穿搭助手。用户可以通过拍照或相册上传衣物，构建个人数字衣橱。系统结合天气上下文、今日场景、目标风格、色彩搭配和用户偏好，生成 2-3 套可解释的每日穿搭 Look。
 
-The MVP focuses on a complete AI product loop: wardrobe digitization, clothing metadata extraction, rule-based recommendation scoring, explainable outfit generation, and a portfolio-ready user experience.
+The MVP is intentionally designed as a complete AI product loop rather than a collection of disconnected UI pages. It demonstrates wardrobe digitization, contextual recommendation, deterministic scoring, explainable reasoning, and responsive demo UX.
 
-项目重点展示从用户痛点、AI 能力拆解、推荐逻辑设计到可运行 Demo 的完整 AI 产品闭环。
+## 2. Target Users
+- Students and young professionals who often ask “what should I wear today?”
+- Users who already own enough clothes but struggle to combine them well
+- Users who want to approximate a target style using their existing wardrobe
+- Reviewers, interviewers, and hiring managers evaluating AI product design and execution
 
-## Tech Stack
-- Frontend: React, Vite, TypeScript, TailwindCSS, React Router
-- Backend: FastAPI, SQLAlchemy 2, Pydantic, SQLite
-- Testing: pytest for backend, `npm run build` plus manual acceptance for frontend
+## 3. Product Problem
+StyleSnap focuses on a practical decision problem:
+- people often repeat the same safe outfits even when they own many clothes
+- target styles are easy to admire but hard to recreate from an existing wardrobe
+- weather affects comfort, layering, shoes, and materials in ways users do not always model explicitly
+- most outfit advice tools are not grounded in the clothes the user already owns
 
-## Wardrobe Core Features
-- Clothes CRUD API for create, list, get, update, and delete
-- Mock AI analyze API based on image URL keywords
-- Filterable wardrobe list by category, color, and season
-- Add and edit flows with manually editable metadata
-- Demo seed wardrobe inserted once for local demos
+StyleSnap solves this by making the wardrobe the source of truth, then layering weather context, occasion constraints, style direction, and user preference on top of it.
 
-## Image Upload UX
-StyleSnap supports a realistic clothing upload flow. On mobile, users can add clothing by taking a photo or choosing from their album. On desktop, users can upload or drag-and-drop an image.
+## 4. Core User Flow
+1. Add clothing by camera, album, drag-and-drop, or local upload
+2. Review or edit mock AI-generated metadata
+3. Save items into a digital wardrobe
+4. Allow location or enter a city to build outfit-aware weather context
+5. Choose occasion, target style, and optional preference text
+6. Generate 2-3 explainable Looks
+7. Compare one focused Look card at a time through previous / next navigation
 
-In the MVP, uploaded images are previewed locally and passed to the mock vision service for metadata generation. The frontend keeps the existing clothes API contract by sending a mock `image_url` identifier for analysis and a local preview placeholder for saved session preview behavior. Future versions can replace this with Supabase Storage or S3.
+## 5. MVP Features
+- Upload-first wardrobe intake flow
+- Mock clothing metadata analysis with manual correction
+- Wardrobe CRUD and filters
+- Weather Skill with location-first flow and city fallback
+- Rule-based outfit recommendation from persisted wardrobe items
+- Explainable score breakdown, reasoning, and warnings
+- Responsive landing, wardrobe, add-item, and recommendation experience
+- Mock-to-real architecture with replaceable service seams
 
-## Weather Skill
-StyleSnap uses weather as a contextual signal for outfit recommendation. The Weather Skill can read location-based or city-based weather data and convert it into outfit-aware context, such as layering needs, rain protection, UV protection, material suggestions, and shoe constraints.
+## 6. AI Capability Design
+StyleSnap separates the product into four AI-facing capabilities:
 
-In the MVP, weather data and location resolution are mocked. The interfaces are designed to be replaceable with real weather and geocoding APIs in later versions.
+### Wardrobe Digitization
+- Users add clothing through realistic image intake
+- Mock vision logic produces editable metadata such as category, color, style, season, and occasion tags
 
-天气不是 StyleSnap 的主功能，而是穿搭推荐的环境上下文能力。Weather Skill 会将温度、降雨概率、风速、湿度和紫外线等信息转化为穿搭推荐可用的约束和提示，例如是否需要外套、是否需要防雨鞋、是否建议防晒、是否避免麂皮材质等。
+### Weather Skill
+- Raw weather data is transformed into outfit-aware context
+- The system produces constraints such as:
+  - `layering_needed`
+  - `outerwear_needed`
+  - `rain_protection_needed`
+  - `uv_protection_needed`
+  - `shoe_constraints`
+  - `styling_hints`
 
-## Recommendation Engine
-- Reads persisted wardrobe items instead of frontend mock data
-- Resolves weather only through the Weather Skill contract
-- Builds bounded outfit candidates from `top + pants` plus optional shoes, outerwear, and hat
-- Scores every candidate with explainable weighted rules
-- Returns 2-3 top-ranked outfits with score breakdown, reasoning, warnings, and meta information
+### Recommendation Engine
+- The engine builds bounded outfit candidates from the actual wardrobe
+- It scores each candidate with deterministic rules across weather, style, color, occasion, and preference
+
+### Explainable Outfit Reasoning
+- StyleSnap does not only rank looks
+- It also explains why a look works, how it scored, and what risks or warnings remain
+
+## 7. System Architecture
+
+### Frontend
+- React + Vite + TypeScript + TailwindCSS + React Router
+- Route-level pages:
+  - landing
+  - wardrobe
+  - add item
+  - edit item
+  - recommendation
+- UI decomposition:
+  - upload panel
+  - weather context panel
+  - recommendation form
+  - outfit carousel
+  - result cards
+
+### Backend
+- FastAPI + SQLAlchemy 2 + Pydantic + SQLite
+- Stable API surface for:
+  - clothes CRUD and mock analyze
+  - weather skill
+  - outfit recommendation
+
+### Replaceable Service Boundaries
+- `ai_vision_service.py`
+- `weather_service.py`
+- `recommendation_service.py`
+- `scoring_service.py`
+- `outfit_reasoning_service.py`
+
+The MVP keeps these adapters mockable and deterministic so the product can be demoed without external vendors or secrets.
+
+## 8. Recommendation Logic
 
 ### Scoring Formula
 ```txt
 OutfitScore =
-0.30 * WeatherFit
-+ 0.25 * StyleMatch
-+ 0.20 * ColorHarmony
-+ 0.15 * OccasionFit
-+ 0.10 * UserPreference
+0.30 * Weather Fit
++ 0.25 * Style Match
++ 0.20 * Color Harmony
++ 0.15 * Occasion Fit
++ 0.10 * User Preference
 ```
 
-### Why Rule-Based Recommendation
-- Phase 4 prioritizes deterministic, testable recommendation behavior.
-- Explainable scoring is easier to validate than a black-box ranking model.
-- The architecture keeps scoring and reasoning replaceable for future LLM or learning-to-rank upgrades.
+### Score Dimensions
+- `Weather Fit`
+  - measures whether thickness, layering, outerwear, rain suitability, UV coverage, and shoe choice match the current outfit context
+- `Style Match`
+  - measures alignment between wardrobe tags and the requested target style
+- `Color Harmony`
+  - measures whether the selected color combination stays cohesive and practical
+- `Occasion Fit`
+  - measures whether the chosen items and style cues suit the requested occasion
+- `User Preference`
+  - measures whether the outfit reflects optional preferences such as comfort, warmth, reduced formality, or a cleaner silhouette
 
-### Future Upgrade Path
-- Replace template reasoning with `llm_service.py`
-- Add learned reranking after collecting evaluation data
-- Expand outfit constraints and style relationships without changing the API contract
+### Recommendation Strategy
+- load persisted wardrobe data
+- build bounded outfit candidates
+- score every candidate deterministically
+- sort and return the top 2-3 Looks
+- attach reasoning and warnings for explainability
 
-## Phase 5 Frontend Experience
-- Recommendation page now supports a full polished flow from weather context to result display
-- Weather Skill is presented as outfit context, not a standalone weather app
-- Add Item now uses upload-first UX instead of URL-first entry
-- Outfit results are shown as focused Look cards with previous / next navigation instead of one long stacked list
-- Users can regenerate recommendations with the current inputs
+## 9. Weather Skill
+Weather is not the main product feature. It is modeled as a contextual skill that converts raw weather signals into outfit-aware constraints, such as layering needs, rain protection, UV protection, material suggestions, and shoe constraints.
 
-## Outfit Carousel UX
-Recommendation results are displayed as focused Look cards. Instead of stacking all generated outfits vertically, StyleSnap shows one Look at a time with simple previous / next navigation, making the result easier to compare on both mobile and desktop.
+天气不是 StyleSnap 的主功能，而是穿搭推荐的环境上下文能力。Weather Skill 会将温度、降雨概率、风速、湿度和紫外线等信息转化为穿搭推荐可用的约束和提示，例如是否需要外套、是否需要防雨鞋、是否建议防晒、是否避免麂皮材质等。
 
-## Clothes API Example
+In the MVP, weather data and location resolution are mocked. The provider seam is kept explicit so real weather and geocoding services can replace the mock layer later.
 
-### Create Clothing Item
-```json
-POST /api/clothes
-{
-  "name": "White T-shirt",
-  "image_url": "https://example.com/white-shirt.jpg",
-  "category": "top",
-  "color": "white",
-  "style_tags": ["Clean Fit", "casual"],
-  "season_tags": ["summer"],
-  "thickness": "thin",
-  "min_temperature": 20,
-  "max_temperature": 32,
-  "rain_suitable": false,
-  "occasion_tags": ["上课", "休闲"],
-  "notes": "Everyday base layer."
-}
-```
+## 10. Image Upload UX
+On mobile, users can add clothing by taking a photo or selecting from their album. On desktop, users can upload or drag-and-drop an image. In the MVP, uploaded images are previewed locally and passed to the mock vision service for metadata generation. Future versions can replace this with Supabase Storage or S3.
 
-### Mock Analyze Example
-```json
-POST /api/clothes/analyze
-{
-  "image_url": "https://example.com/white-tshirt.jpg"
-}
-```
+Additional Phase 5 / 6 upload constraints:
+- file type must start with `image/`
+- file size must be `<= 5MB`
+- URL input remains available only as a demo fallback, not the primary user entry
 
-## Weather API Example
+## 11. API Overview
 
-### Location-Based Weather Skill
-```json
-GET /api/weather/current?lat=25.033&lon=121.565
-{
-  "source": "location",
-  "location": {
-    "lat": 25.033,
-    "lon": 121.565,
-    "resolved_city": "Taipei"
-  },
-  "weather": {
-    "city": "Taipei",
-    "temperature": 27,
-    "feels_like": 29,
-    "min_temp": 24,
-    "max_temp": 30,
-    "weather_condition": "rainy",
-    "rain_probability": 70,
-    "wind_speed": 4.2,
-    "humidity": 78,
-    "uv_index": 5
-  },
-  "outfit_context": {
-    "temperature_level": "warm",
-    "rain_risk": "high",
-    "wind_risk": "medium",
-    "uv_risk": "medium",
-    "layering_needed": false,
-    "outerwear_needed": false,
-    "rain_protection_needed": true,
-    "uv_protection_needed": false,
-    "recommended_materials": ["cotton", "linen", "breathable fabric", "quick-dry fabric"],
-    "avoid_materials": ["suede", "heavy wool"],
-    "shoe_constraints": ["avoid suede shoes", "prefer water-resistant shoes"],
-    "styling_hints": ["choose breathable layers", "avoid long heavy outerwear"]
-  }
-}
-```
+### Health
+- `GET /health`
 
-## Recommendation API Example
-```json
-POST /api/outfits/recommend
-{
-  "occasion": "上课",
-  "target_style": "Clean Fit",
-  "preference_text": "不想太正式，想显高",
-  "weather_source": {
-    "type": "city",
-    "city": "Taipei"
-  }
-}
-```
+### Clothes
+- `POST /api/clothes`
+- `GET /api/clothes`
+- `GET /api/clothes/{id}`
+- `PUT /api/clothes/{id}`
+- `DELETE /api/clothes/{id}`
+- `POST /api/clothes/analyze`
 
-## Demo Flow
-1. Open `/recommendation`
-2. Click `Use my location`, or enter a city manually if location is unavailable
-3. Choose `occasion`
-4. Choose `target_style`
-5. Add optional `preference_text`
-6. Click `Generate Outfits`
-7. Review one focused Look card at a time, then switch between Looks with previous / next navigation
-8. Use regenerate to request another recommendation set
+### Weather Skill
+- `GET /api/weather?city=...`
+- `GET /api/weather/current?lat=...&lon=...`
 
-## Result Card Design
-- `Look 1 / 2 / 3` hierarchy
-- clear total score badge
-- compact item grid with clothing images when available
-- simple progress-bar breakdown for five scoring dimensions
-- summary reasoning first, detailed reasoning behind a collapsible section
-- dedicated warning area with safe empty state
+### Recommendation
+- `POST /api/outfits/recommend`
 
-## Manual Acceptance
-- Add Item mobile flow shows `拍照添加` and `从相册选择`
-- Add Item desktop flow shows upload and drag-and-drop affordances
-- Local image preview appears before save
-- Invalid file type or files over 5MB show upload validation feedback
-- Mock AI analyze works from local file selection
-- Recommendation page loads
-- Weather context can be acquired by location or city fallback
-- Inputs render and submit cleanly
-- 2-3 recommendations render as one-look-at-a-time cards when results exist
-- Insufficient wardrobe state links users to wardrobe
-- Regenerate action re-requests recommendations
-- Wardrobe and landing flows still work
+### API Notes
+- clothes analyze remains mock-only in the MVP
+- weather remains mock-only in the MVP
+- recommendation responses include score breakdown, reasoning, warnings, and meta information
+- backend contracts stay stable across the current demo phases
 
-## Demo Seed Data
-- The backend inserts 8 demo wardrobe items on startup when the clothes table is empty.
-- Seed insertion is guarded so it does not duplicate on later startups.
-- Seed data is disabled in backend tests to keep test isolation clean.
+## 12. Local Development
 
-## Local Development
-
-### Backend Run Command
+### Backend
 ```bash
 cd backend
 uv venv .venv --python 3.13
@@ -201,37 +181,108 @@ uv pip install --python .venv/bin/python --index-url https://pypi.tuna.tsinghua.
 .venv/bin/python -m uvicorn app.main:app --reload
 ```
 
-### Frontend Run Command
+### Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-## Phase 5 Test Command
+### Demo Seed Data
+- The backend inserts demo wardrobe items when the clothes table is empty
+- Seed insertion is guarded to avoid duplication
+- Backend tests disable seed behavior for isolation
+
+## 13. Test Commands
 ```bash
 cd frontend
 npm run build
 
 cd ../backend
+pytest
+```
+
+If `pytest` is not available on `PATH`, use:
+
+```bash
+cd backend
 .venv/bin/python -m pytest
 ```
 
-## Current Phase Status
-- Phase 0: completed
-- Phase 1: project skeleton completed
-- Phase 2: wardrobe core completed
-- Phase 3: weather skill completed
-- Phase 4: recommendation engine completed
-- Phase 5: frontend recommendation flow polish completed
-- Current runtime surface:
-  - Backend `GET /health`
-  - Backend clothes CRUD and mock analyze APIs
-  - Backend weather skill APIs for `GET /api/weather/current` and `GET /api/weather`
-  - Backend recommendation engine API for `POST /api/outfits/recommend`
-  - Frontend wardrobe list, add item, edit item, delete, and filters
-  - Frontend upload-first Add Item flow with local preview and mock analyze support
-  - Frontend polished recommendation page with location-first weather flow, focused Look cards, reasoning, warnings, and regenerate behavior
+## 14. Demo Flow
+Recommended interview or screen-recording flow:
+1. Open the landing page and explain the product in one sentence
+2. Go to `Wardrobe`
+3. Open `Add Item` and show mobile/desktop upload-first UX
+4. Run Mock AI analyze and show that metadata remains editable
+5. Save the item and return to wardrobe
+6. Open `Recommendation`
+7. Use location or city fallback to resolve Weather Skill context
+8. Choose occasion, target style, and optional preference text
+9. Generate Looks
+10. Switch between Look cards and explain score breakdown, reasoning, and warnings
 
-## Roadmap
-- Phase 6: landing page polish, README packaging, portfolio framing, roadmap presentation, and final demo narrative
+## 15. Privacy Notes
+- StyleSnap is currently a single-user local MVP
+- The MVP does not send wardrobe data to third-party AI services by default
+- Uploaded images are previewed locally in the frontend during the current session
+- The MVP does not yet provide cloud asset persistence, auth, or multi-user isolation
+- No API keys are required for the current demo loop
+- Users should understand that current uploaded preview behavior is local-demo oriented rather than production-grade storage
+
+## 16. Mock-to-Real Roadmap
+
+| MVP Mock Layer | Future Real Service |
+|---|---|
+| Mock Vision Service | GPT-4o / Gemini Vision / Qwen-VL / InternVL |
+| Local Preview Image | Supabase Storage / S3 |
+| Mock Weather Provider | OpenWeatherMap / 和风天气 / 高德天气 |
+| Mock Location Resolver | 高德 / Google / Mapbox reverse geocoding |
+| Rule-based Scoring | LLM-assisted stylist reasoning + learning-to-rank |
+| Template Explanation | LLM-generated personalized explanation |
+
+## 17. Portfolio Description
+Designed and implemented StyleSnap, an AI personal outfit assistant that transforms uploaded clothing images into a digital wardrobe and generates explainable daily outfit recommendations using weather context, style goals, occasion constraints, color harmony, and user preferences.
+
+The project demonstrates a complete AI product loop: wardrobe digitization, context-aware recommendation, rule-based scoring, explainable reasoning, responsive UX, and mock-to-real service architecture.
+
+设计并实现 StyleSnap，一款基于个人衣橱的 AI 每日穿搭助手。用户可通过拍照或相册上传衣物构建数字衣橱，系统结合天气上下文、目标风格、今日场景、色彩搭配和个人偏好，生成可解释的每日穿搭推荐。
+
+项目展示了从用户痛点、AI 能力拆解、推荐评分设计、Weather Skill 封装，到移动端/PC 端适配 Demo 的完整 AI 产品闭环。
+
+## 18. Future Roadmap
+- replace mock vision with real multimodal clothing understanding
+- persist wardrobe images through production storage
+- replace mock weather and mock location resolution with real providers
+- add richer preference modeling and stylist personalization
+- introduce LLM-assisted explanation or reranking after privacy boundaries are defined
+- migrate from SQLite to PostgreSQL or Supabase in production environments
+- add auth and ownership isolation in a dedicated multi-user phase
+
+## 19. Deployment Notes
+
+### Frontend
+- Vercel
+- Netlify
+
+### Backend
+- Railway
+- Render
+- Fly.io
+
+### Database
+- SQLite for local MVP
+- PostgreSQL or Supabase for production
+
+### Storage
+- Local preview for MVP
+- Supabase Storage or S3 for production
+
+### Deployment Positioning
+- The current repository is deployment-aware but still MVP-oriented
+- Production deployment should be paired with:
+  - auth and user ownership
+  - persistent asset storage
+  - environment-managed secrets
+  - production database migration
+  - privacy and lifecycle policies for wardrobe images

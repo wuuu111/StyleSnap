@@ -1,7 +1,7 @@
 # Weather Module Requirements
 
 ## Feature Goal
-Return stable weather data for a user-provided city and display it on the recommendation page without turning the product into a weather app.
+Return stable weather data for a user-provided city and display it on the recommendation page without turning the product into a standalone weather product.
 
 ## User Stories
 - As a user, I can enter a city and get weather data back.

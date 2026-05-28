@@ -20,9 +20,8 @@
 ## Known Constraints
 - Recommendation reasoning is template-based, not LLM-based
 - Candidate generation is bounded for MVP simplicity
-- Frontend result presentation is functional but not yet portfolio-polished
+- Backend recommendation output is stable and now consumed by a portfolio-polished frontend flow
 - Weather and wardrobe rules are deterministic and may need future calibration
 
-## Phase 5 Dependencies
-- The frontend can now consume a stable recommendation contract
-- Phase 5 can focus on richer result cards, interaction, and presentation quality without changing the backend API
+## Final Positioning
+- The recommendation contract remains intentionally stable while presentation, documentation, and launch-readiness packaging evolve around it

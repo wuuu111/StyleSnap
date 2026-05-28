@@ -10,6 +10,7 @@
 - Mock analyze API under `/api/clothes/analyze`
 - Demo seed wardrobe bootstrap with duplicate guard
 - Frontend wardrobe list, add item, edit item, delete item, and filters
+- Upload-first Add Item flow with local preview, file validation, and mock analyze handoff
 
 ## Current API Surface
 - `GET /health`
@@ -26,6 +27,5 @@
 - Single-user local dataset only
 - Frontend manual acceptance is still needed for full UX validation beyond build output
 
-## Phase 3 Dependencies
-- Weather module can assume wardrobe data exists with category, tags, temperature range, and rain suitability fields
-- Recommendation engine can consume `ClothingItem` records directly once weather inputs are added
+## Final Positioning
+- Wardrobe metadata remains the source of truth for recommendation and portfolio demo flows

@@ -25,3 +25,10 @@
 - Weather worked better as a compact contextual entry section than as an always-visible detailed dashboard.
 - Splitting score, reasoning, and warnings into separate cards improved screenshot quality without any backend change.
 - Explicit insufficient-wardrobe and no-result states made the recommendation experience feel more product-grade than generic API error text.
+
+## Phase 6: Portfolio Polish
+- The strongest next step after a complete MVP loop was not more features but clearer product storytelling and portfolio packaging.
+- Treating README as a product document rather than only a developer setup note made the project much easier to evaluate in interview settings.
+- Landing-page polish mattered because the first screen now communicates the product problem and AI capability breakdown without requiring a code walk-through.
+- Mock-to-real roadmap notes strengthened the project by showing upgrade thinking without destabilizing the working demo.
+- Privacy notes and honest MVP limitations improved credibility more than pretending local preview and mock providers were already production-ready.

@@ -31,8 +31,8 @@
 ## Known Constraints
 - Frontend still uses manual acceptance rather than automated UI tests
 - Upload preview remains local-session MVP behavior rather than real object storage
-- Recommendation visuals are improved, but final portfolio packaging still remains for the next phase
+- Recommendation visuals are now integrated into a portfolio-ready landing and README narrative
 - Backend scoring and reasoning remain deterministic and unchanged
 
-## Phase 6 Dependencies
-- Phase 6 can focus on homepage storytelling, README framing, and portfolio polish without needing to restructure the recommendation page again
+## Final Positioning
+- The recommendation flow is now presentation-ready for screenshots, recordings, and interview walkthroughs without changing the backend contract
