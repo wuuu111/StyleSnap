@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from app.schemas.clothing import ClothingRead
 from app.schemas.weather import WeatherData
+from app.services.providers.mock_stylist_provider import MockStylistProvider
 from app.services.scoring_service import (
     color_harmony_score,
     occasion_fit_score,
@@ -120,6 +121,134 @@ def test_recommendation_score_breakdown_contains_all_dimensions(seeded_client) -
         "occasion_fit",
         "user_preference",
     }
+
+
+def test_recommend_outfits_returns_ai_metadata_in_mock_mode(
+    seeded_client,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("STYLIST_PROVIDER", "mock")
+
+    response = seeded_client.post(
+        "/api/outfits/recommend",
+        json={
+            "occasion": "上课",
+            "target_style": "Clean Fit",
+            "preference_text": "",
+            "weather_source": {
+                "type": "city",
+                "city": "Taipei",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    metadata = response.json()["ai_metadata"]
+    assert metadata["stylist_provider"] == "mock"
+    assert metadata["stylist_model"] == "mock"
+    assert metadata["fallback_used"] is False
+
+
+def test_recommend_outfits_falls_back_when_deepseek_has_no_key(
+    seeded_client,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("STYLIST_PROVIDER", "deepseek")
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+
+    response = seeded_client.post(
+        "/api/outfits/recommend",
+        json={
+            "occasion": "上课",
+            "target_style": "Clean Fit",
+            "preference_text": "",
+            "weather_source": {
+                "type": "city",
+                "city": "Taipei",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    metadata = response.json()["ai_metadata"]
+    assert metadata["stylist_provider"] == "mock"
+    assert metadata["fallback_used"] is True
+
+
+def test_valid_ai_recommended_order_reorders_results(
+    seeded_client,
+    monkeypatch,
+) -> None:
+    class ReorderingStylistProvider(MockStylistProvider):
+        def enhance_outfit_recommendations(self, *, user_context: dict, weather_context: dict, candidate_outfits: list[dict]) -> dict:
+            base = super().enhance_outfit_recommendations(
+                user_context=user_context,
+                weather_context=weather_context,
+                candidate_outfits=candidate_outfits,
+            )
+            reversed_order = list(reversed(base["recommended_order"]))
+            base["recommended_order"] = reversed_order
+            base["looks"] = list(reversed(base["looks"]))
+            return base
+
+    monkeypatch.setattr(
+        "app.services.recommendation_service.get_stylist_provider",
+        lambda: ReorderingStylistProvider(),
+    )
+
+    response = seeded_client.post(
+        "/api/outfits/recommend",
+        json={
+            "occasion": "上课",
+            "target_style": "Clean Fit",
+            "preference_text": "",
+            "weather_source": {
+                "type": "city",
+                "city": "Taipei",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    look_ids = [item["id"] for item in response.json()["recommended_outfits"]]
+    assert look_ids == ["look_3", "look_2", "look_1"]
+
+
+def test_invalid_ai_recommended_order_preserves_rule_order(
+    seeded_client,
+    monkeypatch,
+) -> None:
+    class InvalidOrderStylistProvider(MockStylistProvider):
+        def enhance_outfit_recommendations(self, *, user_context: dict, weather_context: dict, candidate_outfits: list[dict]) -> dict:
+            base = super().enhance_outfit_recommendations(
+                user_context=user_context,
+                weather_context=weather_context,
+                candidate_outfits=candidate_outfits,
+            )
+            base["recommended_order"] = ["look_3"]
+            return base
+
+    monkeypatch.setattr(
+        "app.services.recommendation_service.get_stylist_provider",
+        lambda: InvalidOrderStylistProvider(),
+    )
+
+    response = seeded_client.post(
+        "/api/outfits/recommend",
+        json={
+            "occasion": "上课",
+            "target_style": "Clean Fit",
+            "preference_text": "",
+            "weather_source": {
+                "type": "city",
+                "city": "Taipei",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    look_ids = [item["id"] for item in response.json()["recommended_outfits"]]
+    assert look_ids == ["look_1", "look_2", "look_3"]
 
 
 def test_empty_wardrobe_returns_stable_error(client) -> None:

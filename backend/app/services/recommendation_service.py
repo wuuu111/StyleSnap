@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.schemas.clothing import ClothingRead
 from app.schemas.outfit import (
+    AIStylistMetadata,
     OutfitRecommendationRequest,
     OutfitRecommendationResponse,
     OutfitScoreBreakdown,
@@ -15,6 +16,7 @@ from app.schemas.outfit import (
 from app.schemas.weather import WeatherSkillResponse
 from app.services.clothing_service import list_clothes
 from app.services.outfit_reasoning_service import build_outfit_reasoning, build_outfit_warnings
+from app.services.providers.provider_factory import get_stylist_provider
 from app.services.scoring_service import (
     color_harmony_score,
     occasion_fit_score,
@@ -156,6 +158,95 @@ def _to_read_items(db: Session) -> list[ClothingRead]:
     return [ClothingRead.model_validate(item) for item in list_clothes(db)]
 
 
+def _serialize_weather_context(weather_context: WeatherSkillResponse) -> dict:
+    return weather_context.model_dump(mode="json")
+
+
+def _serialize_user_context(payload: OutfitRecommendationRequest) -> dict:
+    return {
+        "occasion": payload.occasion,
+        "target_style": payload.target_style,
+        "preference_text": payload.preference_text,
+    }
+
+
+def _serialize_candidate_outfit(
+    outfit: RecommendedOutfit,
+    weather_context: WeatherSkillResponse,
+) -> dict:
+    return {
+        "id": outfit.id,
+        "total_score": outfit.total_score,
+        "score_breakdown": outfit.score_breakdown.model_dump(),
+        "warnings": outfit.warnings,
+        "items": [
+            {
+                "role": entry.role,
+                "name": entry.item.name,
+                "category": entry.item.category,
+                "color": entry.item.color,
+                "style_tags": entry.item.style_tags,
+                "season_tags": entry.item.season_tags,
+                "occasion_tags": entry.item.occasion_tags,
+                "thickness": entry.item.thickness,
+                "rain_suitable": entry.item.rain_suitable,
+            }
+            for entry in outfit.items
+        ],
+        "baseline_reasoning": outfit.reasoning.model_dump(),
+        "weather_context_summary": {
+            "temperature_level": weather_context.outfit_context.temperature_level,
+            "rain_protection_needed": weather_context.outfit_context.rain_protection_needed,
+            "outerwear_needed": weather_context.outfit_context.outerwear_needed,
+        },
+    }
+
+
+def _merge_stylist_output(
+    recommendations: list[RecommendedOutfit],
+    stylist_result: dict,
+) -> list[RecommendedOutfit]:
+    by_id = {outfit.id: outfit for outfit in recommendations}
+    look_payloads = {
+        look["id"]: look
+        for look in stylist_result.get("looks", [])
+        if isinstance(look, dict) and "id" in look
+    }
+
+    for outfit_id, look in look_payloads.items():
+        outfit = by_id.get(outfit_id)
+        if outfit is None:
+            continue
+
+        outfit.reasoning.summary = look.get("stylist_summary") or outfit.reasoning.summary
+        outfit.reasoning.weather_reasoning = (
+            look.get("weather_reasoning") or outfit.reasoning.weather_reasoning
+        )
+        outfit.reasoning.style_reasoning = (
+            look.get("style_reasoning") or outfit.reasoning.style_reasoning
+        )
+        outfit.reasoning.color_reasoning = (
+            look.get("color_reasoning") or outfit.reasoning.color_reasoning
+        )
+        outfit.reasoning.occasion_reasoning = (
+            look.get("occasion_reasoning") or outfit.reasoning.occasion_reasoning
+        )
+        outfit.reasoning.preference_reasoning = (
+            look.get("preference_reasoning") or outfit.reasoning.preference_reasoning
+        )
+
+    recommended_order = stylist_result.get("recommended_order", [])
+    expected_ids = [outfit.id for outfit in recommendations]
+    if (
+        isinstance(recommended_order, list)
+        and len(recommended_order) == len(expected_ids)
+        and set(recommended_order) == set(expected_ids)
+    ):
+        return [by_id[outfit_id] for outfit_id in recommended_order]
+
+    return recommendations
+
+
 def recommend_outfits(db: Session, payload: OutfitRecommendationRequest) -> OutfitRecommendationResponse:
     weather_context = _resolve_weather_context(payload)
     wardrobe_items = _to_read_items(db)
@@ -180,7 +271,7 @@ def recommend_outfits(db: Session, payload: OutfitRecommendationRequest) -> Outf
     for index, (candidate, breakdown, total_score) in enumerate(scored_candidates[:3], start=1):
         recommendations.append(
             RecommendedOutfit(
-                id=f"outfit_{index}",
+                id=f"look_{index}",
                 items=[
                     RecommendedOutfitItem(role=role, item=item)
                     for role, item in candidate.items()
@@ -199,6 +290,17 @@ def recommend_outfits(db: Session, payload: OutfitRecommendationRequest) -> Outf
             )
         )
 
+    stylist_provider = get_stylist_provider()
+    stylist_result = stylist_provider.enhance_outfit_recommendations(
+        user_context=_serialize_user_context(payload),
+        weather_context=_serialize_weather_context(weather_context),
+        candidate_outfits=[
+            _serialize_candidate_outfit(outfit, weather_context)
+            for outfit in recommendations
+        ],
+    )
+    recommendations = _merge_stylist_output(recommendations, stylist_result)
+
     return OutfitRecommendationResponse(
         weather_context=weather_context,
         recommended_outfits=recommendations,
@@ -206,5 +308,10 @@ def recommend_outfits(db: Session, payload: OutfitRecommendationRequest) -> Outf
             candidate_count=len(candidates),
             returned_count=len(recommendations),
             scoring_version=SCORING_VERSION,
+        ),
+        ai_metadata=AIStylistMetadata(
+            stylist_provider=stylist_result.get("provider", "mock"),
+            stylist_model=stylist_result.get("model", "mock"),
+            fallback_used=bool(stylist_result.get("fallback_used", False)),
         ),
     )

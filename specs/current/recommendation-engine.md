@@ -9,7 +9,7 @@
 - Bounded outfit candidate generation from persisted wardrobe items
 - Rule-based scoring across weather, style, color, occasion, and user preference
 - Template reasoning and warnings
-- Minimal frontend recommendation flow and result preview
+- Additive AI stylist enhancement layer with fallback-safe provider metadata
 
 ## Current API Surface
 - `GET /health`
@@ -22,6 +22,7 @@
 - Candidate generation is bounded for MVP simplicity
 - Backend recommendation output is stable and now consumed by a portfolio-polished frontend flow
 - Weather and wardrobe rules are deterministic and may need future calibration
+- DeepSeek can enhance explanation and optional reorder, but does not replace rule-based ranking
 
 ## Final Positioning
 - The recommendation contract remains intentionally stable while presentation, documentation, and launch-readiness packaging evolve around it

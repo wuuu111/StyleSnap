@@ -103,7 +103,14 @@ class RecommendationMeta(BaseModel):
     scoring_version: str
 
 
+class AIStylistMetadata(BaseModel):
+    stylist_provider: str
+    stylist_model: str
+    fallback_used: bool
+
+
 class OutfitRecommendationResponse(BaseModel):
     weather_context: WeatherSkillResponse
     recommended_outfits: list[RecommendedOutfit]
     meta: RecommendationMeta
+    ai_metadata: AIStylistMetadata | None = None

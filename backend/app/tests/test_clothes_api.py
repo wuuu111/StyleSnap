@@ -159,6 +159,24 @@ def test_analyze_clothing_image_requires_url(client) -> None:
     assert response.json()["error"]["code"] == "INVALID_INPUT"
 
 
+def test_analyze_clothing_image_falls_back_to_mock_when_real_vision_unconfigured(
+    client,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("VISION_PROVIDER", "qwen")
+    monkeypatch.delenv("VISION_API_KEY", raising=False)
+    monkeypatch.delenv("VISION_BASE_URL", raising=False)
+    monkeypatch.delenv("VISION_MODEL", raising=False)
+
+    response = client.post(
+        "/api/clothes/analyze",
+        json={"image_url": "https://example.com/white-tshirt.jpg"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["category"] == "top"
+
+
 def test_demo_seed_data_is_inserted_once(seeded_client) -> None:
     first_response = seeded_client.get("/api/clothes")
     second_response = seeded_client.get("/api/clothes")

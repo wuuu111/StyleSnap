@@ -32,3 +32,10 @@
 - Landing-page polish mattered because the first screen now communicates the product problem and AI capability breakdown without requiring a code walk-through.
 - Mock-to-real roadmap notes strengthened the project by showing upgrade thinking without destabilizing the working demo.
 - Privacy notes and honest MVP limitations improved credibility more than pretending local preview and mock providers were already production-ready.
+
+## Phase 7: Real AI Provider Integration
+- Keeping the LLM strictly post-ranking preserved product trust, because the system still only reasons over real wardrobe candidates instead of inventing clothes.
+- Provider selection through environment variables made it possible to add real AI capability without sacrificing local demo stability.
+- Additive `ai_metadata` was enough to expose provider execution details without forcing any frontend contract rewrite.
+- A mock-first vision abstraction was the right compromise: it improved architecture now without forcing image storage, privacy, or multimodal rollout complexity in the same phase.
+- Fallback behavior needs to be treated as a first-class feature, not just error handling, when AI augmentation is layered onto a deterministic core.

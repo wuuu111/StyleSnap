@@ -171,7 +171,58 @@ Additional Phase 5 / 6 upload constraints:
 - recommendation responses include score breakdown, reasoning, warnings, and meta information
 - backend contracts stay stable across the current demo phases
 
-## 12. Local Development
+## 12. Real AI Provider Integration
+StyleSnap now supports a provider-based AI architecture for the stylist layer while keeping rule-based recommendation as the source of truth.
+
+### Default Behavior
+- `STYLIST_PROVIDER=mock`
+- `VISION_PROVIDER=mock`
+- if DeepSeek is selected without a valid API key, the backend automatically falls back to mock stylist output
+- if a non-mock vision mode is selected without complete config, the backend falls back to mock vision
+
+### What DeepSeek Is Used For
+- enhance the explanation of already-selected top looks
+- improve stylist tone and readability
+- optionally reorder the top looks when a complete valid `recommended_order` is returned
+
+### What DeepSeek Is Not Used For
+- it does not generate candidate outfits from scratch
+- it does not invent clothing items the user does not own
+- it does not replace rule-based scoring
+- it does not receive raw clothing images in this phase
+
+### Example `.env`
+```bash
+STYLIST_PROVIDER=deepseek
+VISION_PROVIDER=mock
+DEEPSEEK_API_KEY=your_key_here
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-flash
+DEEPSEEK_TIMEOUT_SECONDS=30
+```
+
+Do not commit real API keys.
+
+### Vision Provider Direction
+- current default: mock keyword-based clothing analysis
+- current abstraction: provider interface plus placeholder real-vision path
+- future candidates:
+  - Qwen-VL
+  - Gemini Vision
+  - GPT-4o Vision
+  - InternVL
+
+### Fallback Behavior
+- provider failures must never break `/api/outfits/recommend`
+- provider failures must never break `/api/clothes/analyze`
+- when fallback happens, recommendation responses include `ai_metadata` so the caller can see which provider actually ran
+
+### API Key Safety
+- API keys only come from environment variables
+- the backend does not log API keys
+- the stylist provider sends only structured clothing metadata and context, not original images
+
+## 13. Local Development
 
 ### Backend
 ```bash
@@ -193,7 +244,7 @@ npm run dev
 - Seed insertion is guarded to avoid duplication
 - Backend tests disable seed behavior for isolation
 
-## 13. Test Commands
+## 14. Test Commands
 ```bash
 cd frontend
 npm run build
@@ -209,7 +260,7 @@ cd backend
 .venv/bin/python -m pytest
 ```
 
-## 14. Demo Flow
+## 15. Demo Flow
 Recommended interview or screen-recording flow:
 1. Open the landing page and explain the product in one sentence
 2. Go to `Wardrobe`
@@ -222,15 +273,16 @@ Recommended interview or screen-recording flow:
 9. Generate Looks
 10. Switch between Look cards and explain score breakdown, reasoning, and warnings
 
-## 15. Privacy Notes
+## 16. Privacy Notes
 - StyleSnap is currently a single-user local MVP
 - The MVP does not send wardrobe data to third-party AI services by default
 - Uploaded images are previewed locally in the frontend during the current session
+- The DeepSeek stylist layer, when enabled, receives structured outfit metadata only, not raw images
 - The MVP does not yet provide cloud asset persistence, auth, or multi-user isolation
 - No API keys are required for the current demo loop
 - Users should understand that current uploaded preview behavior is local-demo oriented rather than production-grade storage
 
-## 16. Mock-to-Real Roadmap
+## 17. Mock-to-Real Roadmap
 
 | MVP Mock Layer | Future Real Service |
 |---|---|
@@ -241,7 +293,7 @@ Recommended interview or screen-recording flow:
 | Rule-based Scoring | LLM-assisted stylist reasoning + learning-to-rank |
 | Template Explanation | LLM-generated personalized explanation |
 
-## 17. Portfolio Description
+## 18. Portfolio Description
 Designed and implemented StyleSnap, an AI personal outfit assistant that transforms uploaded clothing images into a digital wardrobe and generates explainable daily outfit recommendations using weather context, style goals, occasion constraints, color harmony, and user preferences.
 
 The project demonstrates a complete AI product loop: wardrobe digitization, context-aware recommendation, rule-based scoring, explainable reasoning, responsive UX, and mock-to-real service architecture.
@@ -250,8 +302,9 @@ The project demonstrates a complete AI product loop: wardrobe digitization, cont
 
 项目展示了从用户痛点、AI 能力拆解、推荐评分设计、Weather Skill 封装，到移动端/PC 端适配 Demo 的完整 AI 产品闭环。
 
-## 18. Future Roadmap
+## 19. Future Roadmap
 - replace mock vision with real multimodal clothing understanding
+- expand the stylist layer from fallback-safe explanation enhancement to richer comparison and personalization
 - persist wardrobe images through production storage
 - replace mock weather and mock location resolution with real providers
 - add richer preference modeling and stylist personalization
@@ -259,7 +312,7 @@ The project demonstrates a complete AI product loop: wardrobe digitization, cont
 - migrate from SQLite to PostgreSQL or Supabase in production environments
 - add auth and ownership isolation in a dedicated multi-user phase
 
-## 19. Deployment Notes
+## 20. Deployment Notes
 
 ### Frontend
 - Vercel
